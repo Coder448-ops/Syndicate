@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="uz" class="notranslate">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SYNDICATE: CIPHER CORE v60.0</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&family=JetBrains+Mono:wght@300;500;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="icon" href="Ux.png">
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+    <style>
+        :root {
+            --neonRed: #ff0044;
+            --neonBlue: #00f2ff;
+            --neonGold: #ffcc00;
+            --neonGreen: #00ff88;
+            --deepBlack: #020204;
+            --panelBg: rgba(10, 10, 15, 0.98);
+            --cyberFont: 'Orbitron', sans-serif;
+            --mainFont: 'Rajdhani', sans-serif;
+            --monoFont: 'JetBrains Mono', monospace;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; cursor: crosshair; }
+        body { background: var(--deepBlack); color: #e0e0e0; font-family: var(--mainFont); height: 100vh; overflow: hidden; }
+
+        /* NOTIFICATION SYSTEM */
+        #notifyContainer { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 10000; width: 400px; }
+        .cyberAlert { 
+            background: var(--panelBg); border-left: 4px solid var(--neonRed); padding: 15px 25px; 
+            margin-bottom: 10px; color: #fff; font-family: var(--cyberFont); font-size: 0.8rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); animation: slideDown 0.4s ease-out;
+            display: flex; align-items: center; justify-content: space-between;
+            clip-path: polygon(0 0, 95% 0, 100% 30%, 100% 100%, 5% 100%, 0 70%);
+        }
+        @keyframes slideDown { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        /* LOBBY */
+        #lobby { position: fixed; inset: 0; z-index: 9000; background: #000; display: flex; justify-content: center; align-items: center; }
+        .authBox { width: 450px; padding: 50px; background: var(--panelBg); border: 1px solid #111; position: relative; }
+        .authBox::before { content: ''; position: absolute; top: -2px; left: -2px; right: -2px; bottom: -2px; background: linear-gradient(45deg, var(--neonRed), transparent, var(--neonBlue)); z-index: -1; }
+        
+        /* GAME UI */
+        #mainUI { display: none; height: 100vh; grid-template-rows: 70px 1fr; }
+        .nav { background: #000; border-bottom: 1px solid #15151a; display: flex; justify-content: space-between; align-items: center; padding: 0 30px; }
+        .grid { display: grid; grid-template-columns: 320px 1fr 380px; height: 100%; }
+
+        /* ARENA */
+        .arena { position: relative; background: radial-gradient(circle, #0a0a15 0%, #000 100%); display: flex; justify-content: center; align-items: center; }
+        .battleMap { width: 700px; height: 700px; border: 1px solid rgba(0, 242, 255, 0.05); border-radius: 50%; position: relative; }
+        
+        .playerUnit { position: absolute; width: 120px; transition: 0.5s; text-align: center; }
+        .hex { 
+            width: 85px; height: 85px; background: #050508; border: 2px solid #222; margin: 0 auto;
+            clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+            display: flex; justify-content: center; align-items: center; position: relative;
+        }
+        .hex i { font-size: 1.8rem; color: #333; transition: 0.3s; }
+        .hex.active { border-color: var(--neonBlue); }
+        .hex.active i { color: var(--neonBlue); text-shadow: 0 0 10px var(--neonBlue); }
+        .hex.selected { border-color: var(--neonGold) !important; transform: scale(1.1); box-shadow: 0 0 20px var(--neonGold); }
+
+        /* SIDEBARS */
+        .sidebar { background: #030305; border: 1px solid #0f0f12; padding: 25px; display: flex; flex-direction: column; }
+        .sideHead { font-family: var(--cyberFont); font-size: 0.7rem; color: #444; border-bottom: 1px solid #111; padding-bottom: 10px; margin-bottom: 15px; letter-spacing: 3px; }
+        .scrollArea { flex: 1; overflow-y: auto; scrollbar-width: none; font-family: var(--monoFont); font-size: 0.85rem; }
+        
+        /* COMPONENTS */
+        .input { width: 100%; background: #000; border: 1px solid #222; padding: 18px; color: #fff; font-family: var(--monoFont); margin-bottom: 10px; outline: none; }
+        .btn { 
+            width: 100%; padding: 18px; border: none; font-family: var(--cyberFont); font-weight: 900;
+            background: var(--neonRed); color: #fff; clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%);
+            transition: 0.2s; cursor: pointer;
+        }
+        .btn:hover { filter: brightness(1.2); }
+
+        #nightScreen { 
+            position: absolute; inset: 0; z-index: 5000; background: rgba(0,0,0,0.99); 
+            display: none; flex-direction: column; justify-content: center; align-items: center; 
+        }
+    </style>
+</head>
+<body>
+
+    <div id="notifyContainer"></div>
+    <div id="google_translate_element" style="display:none"></div>
+
+    <section id="lobby">
+        <div class="authBox">
+            <h1 style="font-family: var(--cyberFont); color: var(--neonRed); text-align: center; margin-bottom: 30px; letter-spacing: 10px;">SYNDICATE</h1>
+            <input type="text" id="nickIn" class="input" placeholder="AGENT_NAME_REQUIRED">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <button class="btn" onclick="Core.init(true)">HOST</button>
+                <button class="btn" style="background: var(--neonBlue); color:#000;" onclick="UI.showJoin()">JOIN</button>
+            </div>
+            <div id="joinBox" style="display:none; margin-top:20px;">
+                <input type="text" id="peerIdIn" class="input" placeholder="UPLINK_CODE">
+                <button class="btn" style="background: var(--neonGreen); color:#000;" onclick="Core.init(false)">CONNECT</button>
+            </div>
+        </div>
+    </section>
+
+    <section id="mainUI">
+        <header class="nav">
+            <div style="font-family: var(--monoFont); color: var(--neonBlue);">UPLINK: <span id="uCode">----</span></div>
+            <div id="pTag" style="font-family: var(--cyberFont); color: var(--neonGold);">LOBBY_WAITING</div>
+            <div id="sName" style="font-family: var(--cyberFont); color: var(--neonBlue);">CIPHER</div>
+        </header>
+
+        <main class="grid">
+            <aside class="sidebar">
+                <div class="sideHead">UPLINK_NODES</div>
+                <div id="nodeList" class="scrollArea"></div>
+                <div id="hostMenu" style="display:none;">
+                    <button class="btn" onclick="Logic.start()">EXECUTE_PROTOCOL</button>
+                </div>
+            </aside>
+
+            <section class="arena">
+                <div id="nightScreen">
+                    <h2 id="ntT" style="font-family: var(--cyberFont); font-size: 3rem; color: var(--neonRed); letter-spacing: 15px;">TUN_TUSHDI</h2>
+                    <div id="ntTimer" style="font-family: var(--monoFont); font-size: 4rem; margin-top: 20px;">00</div>
+                </div>
+                <div id="table" class="battleMap"></div>
+                <div style="position: absolute; bottom: 30px;">
+                    <div class="hex" style="width: 140px; height: 150px; border-color: var(--neonGold);">
+                        <div style="text-align: center;">
+                            <i id="rIco" class="fas fa-fingerprint"></i>
+                            <div id="rName" style="font-family: var(--cyberFont); font-size: 0.7rem; margin-top: 10px;">DECRYPTING</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <aside class="sidebar">
+                <div class="sideHead">COMMUNICATION_CHANNEL</div>
+                <div id="chat" class="scrollArea"></div>
+                <div style="margin-top: 20px;">
+                    <button id="actBtn" class="btn" style="background: var(--neonGold); color:#000; display:none; margin-bottom: 10px;" onclick="Logic.cast()">CONFIRM_ACTION</button>
+                    <input type="text" id="msgIn" class="input" placeholder="TYPE_MESSAGE...">
+                    <button class="btn" onclick="Core.sendMsg()">TRANSMIT</button>
+                </div>
+            </aside>
+        </main>
+    </section>
+
+    <script>
+        // -- CORE ENGINE --
+        const Core = {
+            peer: new Peer(Math.floor(10000+Math.random()*90000).toString()),
+            conns: [], players: [], isHost: false, id: null, nick: "",
+
+            init(isHost) {
+                const nick = document.getElementById('nickIn').value.trim();
+                if(!nick) return UI.notify("XATOLIK: NICKNAME_KERAK!", "var(--neonRed)");
+                
+                this.nick = nick;
+                this.isHost = isHost;
+                this.id = this.peer.id;
+
+                if(isHost) {
+                    this.players.push({id: this.id, nick: this.nick, role: "USER", status: "alive", v: 0});
+                    UI.launch();
+                } else {
+                    const target = document.getElementById('peerIdIn').value.trim();
+                    if(!target) return UI.notify("XATOLIK: KOD_KIRITING", "var(--neonRed)");
+                    const c = this.peer.connect(target);
+                    this.setup(c);
+                }
+                document.getElementById('uCode').innerText = this.id;
+            },
+
+            setup(c) {
+                c.on('open', () => {
+                    this.conns.push(c);
+                    if(!this.isHost) UI.launch();
+                    c.send({type: "JOIN", nick: this.nick, id: this.id});
+                });
+                c.on('data', d => this.router(d));
+            },
+
+            router(d) {
+                if(d.type === "JOIN" && this.isHost) {
+                    this.players.push({id: d.id, nick: d.nick, role: "USER", status: "alive", v: 0});
+                    this.sync();
+                    UI.notify(`YANGI NODE: ${d.nick}`, "var(--neonBlue)");
+                }
+                if(d.type === "SYNC") { this.players = d.data; Logic.render(); }
+                if(d.type === "ROLE") { Logic.myRole = d.role; Logic.updateUI(); }
+                if(d.type === "PHASE") { Logic.phase = d.v; Logic.apply(); }
+                if(d.type === "MSG") { UI.pushChat(d.f, d.m); }
+                if(d.type === "VOTE") { if(this.isHost) Logic.processVote(d.t); }
+                if(d.type === "NT") { Logic.handleNight(d); }
+            },
+
+            sync() { this.broadcast({type: "SYNC", data: this.players}); },
+            broadcast(m) { this.conns.forEach(c => c.open && c.send(m)); },
+            sendMsg() {
+                const i = document.getElementById('msgIn');
+                if(!i.value) return;
+                UI.pushChat("Siz", i.value);
+                this.broadcast({type: "MSG", f: this.nick, m: i.value});
+                i.value = "";
+            }
+        };
+
+        // -- LOGIC ENGINE --
+        const Logic = {
+            myRole: "", phase: "LOBBY", target: null,
+            
+            start() {
+                const n = Core.players.length;
+                if(n < 3) return UI.notify("KAMIDA 3 TA PLAYER KERAK!", "var(--neonRed)");
+
+                let pool = ["MAFIA", "SHERIF", "DOCTOR", "CITIZEN", "CITIZEN", "CITIZEN"];
+                if(n >= 10) pool.push("DON", "MANIYAK");
+                if(n >= 13) pool.push("SOTQIN", "HITMAN");
+                if(n >= 15) pool.push("XAKER", "PROKUROR", "ADVOKAT", "SNIPER");
+
+                pool = pool.sort(() => Math.random() - 0.5);
+                Core.players.forEach((p, i) => {
+                    p.role = pool[i] || "CITIZEN";
+                    if(p.id === Core.id) { this.myRole = p.role; this.updateUI(); }
+                    else {
+                        const c = Core.conns.find(x => x.peer === p.id);
+                        if(c) c.send({type: "ROLE", role: p.role});
+                    }
+                });
+                this.setPhase("DAY");
+                UI.notify("O'YIN BOSHLANDI!", "var(--neonGreen)");
+            },
+
+            updateUI() {
+                document.getElementById('rName').innerText = this.myRole;
+                const ico = document.getElementById('rIco');
+                ico.style.opacity = "1";
+                if(this.myRole.includes("MAFIA")) ico.className = "fas fa-skull-crossbones";
+                else if(this.myRole === "SHERIF") ico.className = "fas fa-user-shield";
+                else if(this.myRole === "DOCTOR") ico.className = "fas fa-user-md";
+                else ico.className = "fas fa-user-secret";
+            },
+
+            setPhase(v) {
+                this.phase = v;
+                this.apply();
+                Core.broadcast({type: "PHASE", v: v});
+            },
+
+            apply() {
+                document.getElementById('pTag').innerText = this.phase + "_MODE";
+                if(this.phase === "DAY") document.getElementById('nightScreen').style.display = "none";
+                if(this.phase === "VOTING") document.getElementById('actBtn').style.display = "block";
+                
+                if(Core.isHost && this.phase === "VOTING") {
+                    setTimeout(() => this.runNight(), 30000);
+                }
+            },
+
+            async runNight() {
+                this.setPhase("NIGHT");
+                const steps = [
+                    {r: "MAFIA", l: "MAFIYA_UYGONSIN", c: "var(--neonRed)"},
+                    {r: "SHERIF", l: "SHERIF_UYGONSIN", c: "var(--neonBlue)"},
+                    {r: "DOCTOR", l: "DOKTOR_UYGONSIN", c: "var(--neonGreen)"}
+                ];
+                for(let s of steps) {
+                    await new Promise(res => {
+                        const d = {type: "NT", ...s, t: 15};
+                        Core.broadcast(d); this.handleNight(d);
+                        setTimeout(res, 15000);
+                    });
+                }
+                this.setPhase("DAY");
+            },
+
+            handleNight(d) {
+                const s = document.getElementById('nightScreen');
+                s.style.display = "flex";
+                document.getElementById('ntT').innerText = d.l;
+                document.getElementById('ntT').style.color = d.c;
+                const can = (this.myRole === d.r);
+                s.style.background = can ? "rgba(0,0,0,0.7)" : "rgba(0,0,0,0.99)";
+                document.getElementById('actBtn').style.display = can ? "block" : "none";
+                this.timer(d.t);
+            },
+
+            timer(t) {
+                let c = t; const el = document.getElementById('ntTimer');
+                const i = setInterval(() => {
+                    el.innerText = c < 10 ? "0"+c : c;
+                    c--; if(c < 0) clearInterval(i);
+                }, 1000);
+            },
+
+            cast() {
+                if(!this.target) return;
+                if(Core.isHost) this.processVote(this.target);
+                else Core.conns[0].send({type: "VOTE", t: this.target});
+                UI.notify("ACTION_SENT", "var(--neonGold)");
+            },
+
+            processVote(t) {
+                const p = Core.players.find(x => x.id === t);
+                if(p) { p.v++; Core.sync(); this.render(); }
+            },
+
+            render() {
+                const table = document.getElementById('table');
+                table.innerHTML = "";
+                const r = 280, cx = 350, cy = 350;
+                Core.players.forEach((p, i) => {
+                    const a = (i * 360 / Core.players.length) * (Math.PI / 180);
+                    const x = Math.cos(a) * r + cx - 60;
+                    const y = Math.sin(a) * r + cy - 60;
+                    const div = document.createElement('div');
+                    div.className = "playerUnit";
+                    div.style.left = x+"px"; div.style.top = y+"px";
+                    div.innerHTML = `
+                        <div class="hex ${p.status==='alive'?'active':''} ${this.target===p.id?'selected':''}" 
+                             onclick="Logic.target='${p.id}'; Logic.render()">
+                            <i class="fas fa-user-ninja"></i>
+                            ${p.v > 0 ? `<div style="position:absolute;bottom:0;background:var(--neonRed);padding:2px 5px;font-size:0.6rem;">${p.v}</div>`:''}
+                        </div>
+                        <div style="font-size:0.7rem;margin-top:5px;color:#555">${p.nick}</div>
+                    `;
+                    table.appendChild(div);
+                });
+                const list = document.getElementById('nodeList');
+                list.innerHTML = Core.players.map(p => `<div style="margin-bottom:8px;">> ${p.nick}</div>`).join('');
+            }
+        };
+
+        // -- UI HANDLER --
+        const UI = {
+            launch() {
+                document.getElementById('lobby').style.display = "none";
+                document.getElementById('mainUI').style.display = "grid";
+                document.getElementById('sName').innerText = "NODE_" + Core.nick.toUpperCase();
+                if(Core.isHost) document.getElementById('hostMenu').style.display = "block";
+            },
+            showJoin() { document.getElementById('joinBox').style.display = "block"; },
+            notify(m, c) {
+                const container = document.getElementById('notifyContainer');
+                const el = document.createElement('div');
+                el.className = "cyberAlert";
+                el.style.borderLeftColor = c;
+                el.innerHTML = `<span>${m}</span><i class="fas fa-bolt" style="color:${c}"></i>`;
+                container.appendChild(el);
+                setTimeout(() => el.remove(), 4000);
+            },
+            pushChat(f, m) {
+                const box = document.getElementById('chat');
+                const d = document.createElement('div');
+                d.style.marginBottom = "10px";
+                d.innerHTML = `<span style="color:var(--neonBlue)">[${f}]:</span> <span style="color:#888">${m}</span>`;
+                box.appendChild(d);
+                box.scrollTop = box.scrollHeight;
+            }
+        };
+
+        function googleTranslateElementInit() {
+            new google.translate.TranslateElement({pageLanguage: 'en'}, 'google_translate_element');
+            setTimeout(() => {
+                let s = document.querySelector('select.goog-te-combo');
+                if(s) { s.value = 'uz'; s.dispatchEvent(new Event('change')); }
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
