@@ -1,0 +1,311 @@
+:root {
+  color-scheme: dark;
+  --bg: #05060d;
+  --surface: rgba(10, 16, 28, 0.95);
+  --surface-strong: rgba(18, 26, 44, 0.95);
+  --border: rgba(255, 255, 255, 0.08);
+  --text: #e5e8ff;
+  --muted: #8a92b8;
+  --accent: #7c2cff;
+  --accent-2: #00d9ff;
+  --danger: #ff2f67;
+  --success: #2eff96;
+  --shadow: 0 20px 60px rgba(0, 0, 0, 0.34);
+  --radius: 24px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Inter", system-ui, sans-serif;
+  color: var(--text);
+  background: radial-gradient(circle at top, rgba(124, 44, 255, 0.16), transparent 30%),
+    radial-gradient(circle at 20% 20%, rgba(0, 217, 255, 0.14), transparent 20%),
+    linear-gradient(180deg, #070911 0%, #03040a 100%);
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image: linear-gradient(90deg, rgba(124, 44, 255, 0.06), transparent 25%, rgba(0, 217, 255, 0.1));
+  pointer-events: none;
+  opacity: 0.9;
+}
+
+.app-shell {
+  width: min(1200px, calc(100% - 32px));
+  margin: 24px auto 48px;
+  display: grid;
+  gap: 24px;
+}
+
+.neon-panel {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(18px);
+  padding: 24px;
+  overflow: hidden;
+}
+
+.neon-panel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(135deg, rgba(124, 44, 255, 0.12), transparent 25%, rgba(0, 217, 255, 0.1));
+  mix-blend-mode: screen;
+}
+
+header.hud-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.logo-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.logo-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  padding: 8px 16px;
+  background: rgba(124, 44, 255, 0.2);
+  border-radius: 999px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--accent);
+}
+
+header.hud-panel h1 {
+  margin: 0;
+  font-size: clamp(1.6rem, 2.5vw, 2.4rem);
+  letter-spacing: 0.02em;
+}
+
+.status-block p {
+  margin: 4px 0;
+  color: var(--muted);
+}
+
+.control-panel {
+  display: grid;
+  grid-template-columns: 1.3fr 0.9fr;
+  gap: 24px;
+}
+
+.control-panel h2,
+.main-grid h2,
+.audit-panel h2 {
+  margin: 0 0 16px;
+  color: var(--accent-2);
+}
+
+.panel-column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.input-group,
+.input-row {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.input-row {
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+input[type="text"] {
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  background: rgba(9, 12, 22, 0.96);
+  color: var(--text);
+  padding: 14px 16px;
+  font-size: 0.95rem;
+}
+
+button {
+  border: none;
+  border-radius: 20px;
+  padding: 14px 22px;
+  cursor: pointer;
+  font-weight: 700;
+  color: #fff;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+button::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.18), transparent 45%);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+button:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+button:hover::after {
+  opacity: 1;
+}
+
+.primary-btn {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  box-shadow: 0 18px 36px rgba(124, 44, 255, 0.24);
+}
+
+.secondary-btn {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+.accent-btn {
+  background: linear-gradient(135deg, #00d9ff 0%, #7c2cff 100%);
+}
+
+.player-list-panel {
+  min-height: 260px;
+}
+
+.player-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.player-list li {
+  padding: 12px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(124, 44, 255, 0.18);
+  background: rgba(12, 18, 32, 0.84);
+}
+
+.main-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 24px;
+}
+
+.tutorial-panel,
+.chat-panel,
+.action-panel {
+  min-height: 320px;
+}
+
+.mission-guide {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 20px;
+  background: rgba(7, 12, 24, 0.85);
+  border: 1px solid rgba(0, 217, 255, 0.18);
+}
+
+.mission-guide p,
+.log-entry,
+.audit-entry {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.game-log,
+.audit-log {
+  min-height: 200px;
+  max-height: 340px;
+  overflow-y: auto;
+  background: rgba(1, 4, 11, 0.82);
+  border-radius: 20px;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.log-entry,
+.audit-entry {
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  border-radius: 14px;
+  background: rgba(16, 24, 42, 0.76);
+}
+
+.log-entry.highlight {
+  border-left: 4px solid var(--accent);
+}
+
+.chat-actions {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.action-panel {
+  display: grid;
+  gap: 16px;
+}
+
+.action-panel #actionControls {
+  display: grid;
+  gap: 14px;
+}
+
+.audit-panel {
+  min-height: 220px;
+}
+
+@media (max-width: 900px) {
+  .control-panel,
+  .main-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.night-transition {
+  animation: nightShift 2.2s ease forwards;
+}
+
+@keyframes nightShift {
+  0% {
+    transform: translateY(40px);
+    opacity: 0;
+  }
+  50% {
+    transform: translateY(-10px);
+    opacity: 0.7;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
