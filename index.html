@@ -1,404 +1,80 @@
 <!DOCTYPE html>
 <html lang="uz">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SYNDICATE | CIPHER ULTIMATE v115.0</title>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&family=JetBrains+Mono:wght@300;500;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-
-    <style>
-        :root {
-            --neonRed: #ff0044;
-            --neonBlue: #00f2ff;
-            --neonGold: #ffcc00;
-            --neonGreen: #00ff88;
-            --neonPurple: #bc13fe;
-            --deepBlack: #010103;
-            --panelBg: rgba(5, 5, 10, 0.98);
-            --cyberFont: 'Orbitron', sans-serif;
-            --mainFont: 'Rajdhani', sans-serif;
-            --monoFont: 'JetBrains Mono', monospace;
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; cursor: crosshair; }
-        body { background: var(--deepBlack); color: #e0e0e0; font-family: var(--mainFont); height: 100vh; overflow: hidden; }
-        
-        /* HIDDEN ELEMENTS */
-        .goog-te-banner-frame, .goog-te-menu-value, #google_translate_element { display: none !important; }
-
-        /* NOTIFICATIONS */
-        #notifyStack { position: fixed; top: 25px; left: 50%; transform: translateX(-50%); z-index: 10000; width: 420px; }
-        .alertNode { 
-            background: var(--panelBg); border-left: 5px solid var(--neonRed); padding: 18px 25px; 
-            margin-bottom: 12px; color: #fff; font-family: var(--cyberFont); font-size: 0.8rem;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.7); animation: alertIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            display: flex; align-items: center; justify-content: space-between;
-            clip-path: polygon(0 0, 96% 0, 100% 25%, 100% 100%, 4% 100%, 0 75%);
-        }
-        @keyframes alertIn { from { transform: translateY(-120%) scale(0.9); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
-
-        /* LOBBY */
-        #lobby { position: fixed; inset: 0; z-index: 9000; background: #000; display: flex; justify-content: center; align-items: center; }
-        .authWrapper { width: 500px; padding: 60px; background: var(--panelBg); border: 1px solid #111; position: relative; }
-        .authWrapper::after { content: ''; position: absolute; inset: -2px; background: linear-gradient(90deg, var(--neonRed), transparent, var(--neonBlue)); z-index: -1; }
-        .lobbyTitle { font-family: var(--cyberFont); color: var(--neonRed); text-align: center; font-size: 2.5rem; letter-spacing: 15px; margin-bottom: 40px; text-shadow: 0 0 15px var(--neonRed); }
-
-        /* MAIN APP */
-        #gameApp { display: none; height: 100vh; grid-template-rows: 80px 1fr; }
-        .topNav { background: #000; border-bottom: 1px solid #15151a; display: flex; justify-content: space-between; align-items: center; padding: 0 40px; }
-        .gameContent { display: grid; grid-template-columns: 350px 1fr 400px; height: 100%; }
-
-        /* ARENA */
-        .arenaFrame { position: relative; background: radial-gradient(circle, #080815 0%, #000 100%); display: flex; justify-content: center; align-items: center; overflow: hidden; }
-        .battleRadius { width: 750px; height: 750px; border: 1px solid rgba(0, 242, 255, 0.04); border-radius: 50%; position: relative; }
-        
-        .pNode { position: absolute; width: 130px; transition: 0.6s cubic-bezier(0.23, 1, 0.32, 1); text-align: center; }
-        .pIconBox { 
-            width: 95px; height: 95px; background: #050508; border: 2px solid #222; margin: 0 auto;
-            clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
-            display: flex; justify-content: center; align-items: center; position: relative; transition: 0.3s;
-        }
-        .pIconBox.alive { border-color: var(--neonBlue); }
-        .pIconBox.alive i { color: var(--neonBlue); text-shadow: 0 0 12px var(--neonBlue); font-size: 2rem; }
-        .pIconBox.selected { border-color: var(--neonGold) !important; transform: scale(1.15); box-shadow: 0 0 25px var(--neonGold); }
-
-        /* HUD & TUTORIAL */
-        .roleHud { position: absolute; bottom: 40px; display: flex; flex-direction: column; align-items: center; }
-        .tutorialBox { 
-            width: 320px; background: rgba(0,0,0,0.85); border: 1px solid #222; 
-            padding: 15px; margin-top: 15px; font-size: 0.75rem; color: #888; 
-            text-align: center; font-family: var(--monoFont);
-            clip-path: polygon(0 0, 100% 0, 100% 85%, 90% 100%, 0 100%);
-        }
-        .tutHighlight { color: var(--neonGold); font-weight: bold; display: block; margin-bottom: 5px; }
-
-        /* SIDEBARS */
-        .sidebar { background: #040407; border: 1px solid #111; padding: 30px; display: flex; flex-direction: column; }
-        .sbTitle { font-family: var(--cyberFont); font-size: 0.75rem; color: #444; border-bottom: 1px solid #111; padding-bottom: 12px; margin-bottom: 20px; letter-spacing: 4px; }
-        .streamScroll { flex: 1; overflow-y: auto; scrollbar-width: none; font-family: var(--monoFont); font-size: 0.9rem; }
-        
-        /* UI ELEMENTS */
-        .cInput { width: 100%; background: #000; border: 1px solid #222; padding: 20px; color: #fff; font-family: var(--monoFont); margin-bottom: 12px; outline: none; }
-        .cBtn { 
-            width: 100%; padding: 20px; border: none; font-family: var(--cyberFont); font-weight: 900;
-            background: var(--neonRed); color: #fff; clip-path: polygon(8% 0, 100% 0, 100% 75%, 92% 100%, 0 100%, 0 25%);
-            transition: 0.3s; cursor: pointer; margin-bottom: 10px;
-        }
-        .cBtn:hover { background: #fff; color: #000; transform: translateY(-2px); }
-
-        /* NIGHT OVERLAY */
-        #nightMask { position: absolute; inset: 0; z-index: 5000; background: rgba(0,0,0,0.99); display: none; flex-direction: column; justify-content: center; align-items: center; }
-        .nightTitle { font-family: var(--cyberFont); font-size: 3.5rem; color: var(--neonRed); letter-spacing: 20px; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Syndicate P2P Oʻyin</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <div class="app-shell">
+    <header class="hud-panel neon-panel">
+      <div class="logo-block">
+        <span class="logo-badge">SYNDICATE</span>
+        <h1>PeerJS Mafia Jang</h1>
+      </div>
+      <div class="status-block">
+        <p><strong>Faza:</strong> <span id="phaseLabel">LOBBy</span></p>
+        <p><strong>Holat:</strong> <span id="connectionStatus">Offline</span></p>
+      </div>
+    </header>
 
-    <div id="notifyStack"></div>
-
-    <section id="lobby">
-        <div class="authWrapper">
-            <h1 class="lobbyTitle">SYNDICATE</h1>
-            <input type="text" id="nickInput" class="cInput" placeholder="NICKNAME_REQ">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                <button class="cBtn" onclick="Net.init(true)">CREATE_SERVER</button>
-                <button class="cBtn" style="background: var(--neonBlue); color:#000;" onclick="UI.toggleJoin(true)">JOIN_SERVER</button>
-            </div>
-            <div id="joinArea" style="display:none; margin-top:30px; border-top: 1px solid #222; padding-top: 30px;">
-                <input type="text" id="targetId" class="cInput" placeholder="REMOTE_NODE_ID">
-                <button class="cBtn" style="background: var(--neonGreen); color:#000;" onclick="Net.init(false)">ESTABLISH_JOIN</button>
-            </div>
+    <section class="control-panel neon-panel" id="lobbySection">
+      <div class="panel-column">
+        <h2>Lobbi</h2>
+        <p>Oʻyin tuzing yoki ulaning. Host barcha hahslar va moslashuvlarni nazorat qiladi.</p>
+        <div class="input-group">
+          <label for="playerName">Ismingiz</label>
+          <input id="playerName" type="text" maxlength="16" placeholder="Agent nomi" />
         </div>
+        <div class="input-row">
+          <button id="hostButton" class="primary-btn">Host boʻlish</button>
+          <button id="joinButton" class="secondary-btn">Qoʻshilish</button>
+        </div>
+        <div class="input-group">
+          <label for="connectId">Host ID</label>
+          <input id="connectId" type="text" placeholder="cipher-XXXX.." />
+        </div>
+        <div class="input-row">
+          <button id="startGameButton" class="accent-btn" disabled>Oʻyinni boshlash</button>
+        </div>
+      </div>
+      <div class="panel-column player-list-panel">
+        <h2>Oʻyinchilar</h2>
+        <ul id="playerList" class="player-list"></ul>
+      </div>
     </section>
 
-    <section id="gameApp">
-        <header class="topNav">
-            <div style="font-family: var(--monoFont); color: var(--neonBlue);">
-                <i class="fas fa-network-wired"></i> <span id="uKey">ID_SCANNING...</span>
-            </div>
-            <div id="statusTag" style="font-family: var(--cyberFont); color: var(--neonGold); letter-spacing: 8px;">UPLINK_READY</div>
-            <div id="localNick" style="font-family: var(--cyberFont); color: var(--neonBlue);">CIPHER</div>
-        </header>
+    <section class="main-grid">
+      <article class="neon-panel tutorial-panel">
+        <h2>Vazifa qoʻllanmasi</h2>
+        <div id="missionGuide" class="mission-guide">
+          <p>Avvalo, Lobbi bosqichida oʻynashchi sifatida roʻyxatdan oʻting.</p>
+        </div>
+      </article>
 
-        <main class="gameContent">
-            <aside class="sidebar">
-                <div class="sbTitle">ACTIVE_NODES</div>
-                <div id="nodeView" class="streamScroll"></div>
-                <div id="hostOps" style="display:none; margin-top: auto;">
-                    <button class="cBtn" onclick="Engine.launch()">START_SYNDICATE</button>
-                </div>
-            </aside>
+      <article class="neon-panel chat-panel">
+        <h2>Jamoa chat</h2>
+        <div id="gameLog" class="game-log"></div>
+        <div class="chat-actions">
+          <input id="chatInput" type="text" placeholder="Xabar yozing..." disabled />
+          <button id="sendChatButton" class="primary-btn" disabled>Yuborish</button>
+        </div>
+      </article>
 
-            <section class="arenaFrame">
-                <div id="nightMask">
-                    <h2 id="ntHeader" class="nightTitle">SYSTEM_SLEEP</h2>
-                    <div id="ntClock" style="font-family: var(--monoFont); font-size: 5rem; color: #fff;">00</div>
-                </div>
-                <div id="warMap" class="battleRadius"></div>
-                
-                <div class="roleHud">
-                    <div class="pIconBox" style="width: 110px; height: 120px; border-color: var(--neonGold);">
-                        <div style="text-align: center;">
-                            <i id="roleIco" class="fas fa-fingerprint" style="opacity: 0.2; font-size: 2rem;"></i>
-                            <div id="roleDisplay" style="font-family: var(--cyberFont); font-size: 0.7rem; margin-top: 10px; color: var(--neonGold);">SCANNING</div>
-                        </div>
-                    </div>
-                    <div id="tutBox" class="tutorialBox">
-                        <span class="tutHighlight">PROTOCOL_PENDING</span>
-                        Boshqa o'yinchilar qo'shilishini kuting. O'yin boshlanganda yo'riqnoma shu yerda yangilanadi.
-                    </div>
-                </div>
-            </section>
-
-            <aside class="sidebar">
-                <div class="sbTitle">COMM_LINK</div>
-                <div id="chatStream" class="streamScroll"></div>
-                <div style="margin-top: 25px;">
-                    <button id="tacticalBtn" class="cBtn" style="background: var(--neonGold); color:#000; display:none; margin-bottom: 12px;" onclick="Engine.commit()">CONFIRM_VOTE</button>
-                    <input type="text" id="msgInput" class="cInput" placeholder="TRANSMIT_SIGNAL...">
-                    <button class="cBtn" onclick="Net.transmit()">SEND</button>
-                </div>
-            </aside>
-        </main>
+      <article class="neon-panel action-panel" id="phaseControls">
+        <h2>Faza boshqaruvi</h2>
+        <div id="actionControls"></div>
+      </article>
     </section>
 
-    <script>
-        /* CORE NETWORK LAYER */
-        const Net = {
-            peer: null, conns: [], players: [], isHost: false, id: null, nick: "",
+    <footer class="neon-panel audit-panel">
+      <h2>Audit log</h2>
+      <div id="auditLog" class="audit-log"></div>
+    </footer>
+  </div>
 
-            init(isHost) {
-                this.nick = document.getElementById('nickInput').value.trim();
-                if(!this.nick) return UI.notify("ERR: NICKNAME_REQUIRED", "var(--neonRed)");
-
-                this.isHost = isHost;
-                // PeerJS ID yaratish
-                const customId = Math.floor(10000 + Math.random() * 90000).toString();
-                this.peer = new Peer('cipher-' + customId);
-
-                this.peer.on('open', (id) => {
-                    this.id = id;
-                    document.getElementById('uKey').innerText = id;
-                    if(isHost) {
-                        this.players = [{id: this.id, nick: this.nick, role: "USER", status: "alive", v: 0}];
-                        UI.boot();
-                        this.peer.on('connection', c => this.bind(c));
-                    } else {
-                        const target = document.getElementById('targetId').value.trim();
-                        if(!target) return UI.notify("ERR: TARGET_ID_REQUIRED", "var(--neonRed)");
-                        const c = this.peer.connect(target);
-                        this.bind(c);
-                    }
-                });
-
-                this.peer.on('error', err => UI.notify("PEER_ERROR: " + err.type, "var(--neonRed)"));
-            },
-
-            bind(c) {
-                c.on('open', () => {
-                    if(!this.conns.find(x => x.peer === c.peer)) this.conns.push(c);
-                    UI.boot();
-                    c.send({type: "HANDSHAKE", nick: this.nick, id: this.id});
-                });
-                c.on('data', d => this.handle(d));
-                c.on('close', () => UI.notify("CONNECTION_LOST", "var(--neonRed)"));
-            },
-
-            handle(d) {
-                if(this.isHost && d.type === "HANDSHAKE") {
-                    if(!this.players.find(p => p.id === d.id)) {
-                        this.players.push({id: d.id, nick: d.nick, role: "USER", status: "alive", v: 0});
-                        UI.notify(`NODE_LINKED: ${d.nick}`, "var(--neonBlue)");
-                        this.sync();
-                        Engine.render();
-                    }
-                }
-                if(d.type === "SYNC") { this.players = d.data; Engine.render(); }
-                if(d.type === "MSG") UI.pushChat(d.f, d.m);
-                if(d.type === "ROLE") { Engine.myRole = d.r; Engine.updateUI(); }
-                if(d.type === "PHASE") { Engine.phase = d.v; Engine.apply(); }
-                if(d.type === "VOTE_IN") { if(this.isHost) Engine.vote(d.t); }
-                if(d.type === "NT_SIG") { Engine.handleNT(d); }
-            },
-
-            sync() { this.broadcast({type: "SYNC", data: this.players}); },
-            broadcast(m) { this.conns.forEach(c => { if(c.open) c.send(m); }); },
-            transmit() {
-                const i = document.getElementById('msgInput');
-                if(!i.value) return; UI.pushChat("Siz", i.value);
-                this.broadcast({type: "MSG", f: this.nick, m: i.value});
-                i.value = "";
-            }
-        };
-
-        /* GAME ENGINE */
-        const Engine = {
-            myRole: "", phase: "LOBBY", target: null,
-            manuals: {
-                "MAFIA": "Maqsadingiz: Barcha tinch aholini yo'q qilish. Kechasi bir kishini nishonga oling.",
-                "SHERIF": "Maqsadingiz: Mafiyani fosh qilish. Kechasi o'yinchilarni tekshiring.",
-                "DOCTOR": "Maqsadingiz: Shaharni saqlab qolish. Kechasi bir kishini davolang.",
-                "CITIZEN": "Maqsadingiz: Shubhali o'yinchilarni aniqlab, ularni ovoz berish yo'li bilan chetlatish.",
-                "MANIYAK": "Siz yolg'iz qotilsiz. Maqsadingiz - oxirida tirik qolgan yagona odam bo'lish.",
-                "XAKER": "Tizimni buzib, kechasi istalgan o'yinchining haqiqiy rolini ko'ra olasiz."
-            },
-
-            launch() {
-                const n = Net.players.length;
-                if(n < 3) return UI.notify("ERR: MIN_3_NODES_REQUIRED", "var(--neonRed)");
-                
-                // O'yinchi soniga qarab rollar ro'yxatini tuzish
-                let roles = ["MAFIA", "SHERIF", "DOCTOR", "CITIZEN", "CITIZEN", "MAFIA", "MANIYAK", "XAKER", "CITIZEN", "SHERIF", "CITIZEN", "MAFIA"].slice(0, n);
-                roles = roles.sort(() => Math.random() - 0.5);
-
-                Net.players.forEach((p, i) => {
-                    p.role = roles[i];
-                    if(p.id === Net.id) { this.myRole = p.role; this.updateUI(); }
-                    else {
-                        const c = Net.conns.find(x => x.peer === p.id);
-                        if(c) c.send({type: "ROLE", r: p.role});
-                    }
-                });
-                this.setPhase("DAY");
-            },
-
-            updateUI() {
-                document.getElementById('roleDisplay').innerText = this.myRole;
-                const ico = document.getElementById('roleIco'); ico.style.opacity = "1";
-                if(this.myRole.includes("MAFIA")) ico.className = "fas fa-skull-crossbones";
-                else if(this.myRole === "SHERIF") ico.className = "fas fa-user-shield";
-                else if(this.myRole === "DOCTOR") ico.className = "fas fa-user-md";
-                else ico.className = "fas fa-user-ninja";
-
-                document.getElementById('tutBox').innerHTML = `<span class="tutHighlight">PROTOCOL: ${this.myRole}</span> ${this.manuals[this.myRole] || "Vazifangizni bajaring."}`;
-            },
-
-            setPhase(v) { this.phase = v; this.apply(); Net.broadcast({type: "PHASE", v: v}); },
-
-            apply() {
-                document.getElementById('statusTag').innerText = this.phase;
-                if(this.phase === "DAY") document.getElementById('nightMask').style.display = "none";
-                document.getElementById('tacticalBtn').style.display = (this.phase === "VOTING") ? "block" : "none";
-                if(Net.isHost && this.phase === "VOTING") setTimeout(() => this.runNight(), 20000);
-            },
-
-            async runNight() {
-                this.setPhase("NIGHT");
-                const steps = [
-                    {r:"MAFIA",l:"MAFIYA_ACTION",c:"var(--neonRed)"},
-                    {r:"SHERIF",l:"SHERIF_SCAN",c:"var(--neonBlue)"},
-                    {r:"DOCTOR",l:"DOCTOR_REPAIR",c:"var(--neonGreen)"}
-                ];
-                for(let s of steps) {
-                    await new Promise(res => {
-                        const d = {type:"NT_SIG",...s,t:15}; Net.broadcast(d); this.handleNT(d);
-                        setTimeout(res, 16000);
-                    });
-                }
-                this.setPhase("DAY");
-            },
-
-            handleNT(d) {
-                const m = document.getElementById('nightMask'); m.style.display = "flex";
-                document.getElementById('ntHeader').innerText = d.l;
-                document.getElementById('ntHeader').style.color = d.c;
-                const active = (this.myRole === d.r);
-                m.style.background = active ? "rgba(0,0,0,0.7)" : "rgba(0,0,0,0.99)";
-                document.getElementById('tacticalBtn').style.display = active ? "block" : "none";
-                this.timer(d.t);
-            },
-
-            timer(t) {
-                let c = t; const el = document.getElementById('ntClock');
-                const i = setInterval(() => { el.innerText = c < 10 ? "0"+c : c; c--; if(c < 0) clearInterval(i); }, 1000);
-            },
-
-            commit() {
-                if(!this.target) return;
-                if(Net.isHost) this.vote(this.target);
-                else Net.conns[0].send({type: "VOTE_IN", t: this.target});
-                UI.notify("ACTION_CONFIRMED", "var(--neonGold)");
-            },
-
-            vote(t) { const p = Net.players.find(x => x.id === t); if(p) { p.v++; Net.sync(); this.render(); } },
-
-            render() {
-                const map = document.getElementById('warMap'); map.innerHTML = "";
-                const r = 300, cx = 375, cy = 375;
-                Net.players.forEach((p, i) => {
-                    const a = (i * 360 / Net.players.length) * (Math.PI / 180);
-                    const x = Math.cos(a) * r + cx - 65; const y = Math.sin(a) * r + cy - 65;
-                    const node = document.createElement('div'); node.className = "pNode";
-                    node.style.left = x+"px"; node.style.top = y+"px";
-                    node.innerHTML = `
-                        <div class="pIconBox ${p.status==='alive'?'alive':''} ${this.target===p.id?'selected':''}" 
-                             onclick="Engine.target='${p.id}'; Engine.render()">
-                            <i class="fas fa-user-ninja"></i>
-                            ${p.v > 0 ? `<div style="position:absolute;bottom:0;background:var(--neonRed);padding:2px 6px;font-size:0.6rem;">${p.v}</div>`:''}
-                        </div>
-                        <div style="font-size:0.75rem;margin-top:10px;color:#555;">${p.nick}</div>
-                    `;
-                    map.appendChild(node);
-                });
-                document.getElementById('nodeView').innerHTML = Net.players.map(p => `<div style="margin-bottom:8px; border-left: 2px solid #222; padding-left: 10px;">> ${p.nick}</div>`).join('');
-            }
-        };
-
-        /* UI LAYER */
-        const UI = {
-            boot() {
-                document.getElementById('lobby').style.display = "none";
-                document.getElementById('gameApp').style.display = "grid";
-                document.getElementById('localNick').innerText = "NODE_" + Net.nick.toUpperCase();
-                if(Net.isHost) document.getElementById('hostOps').style.display = "block";
-            },
-            toggleJoin(v) { document.getElementById('joinArea').style.display = v ? "block" : "none"; },
-            notify(m, c) {
-                const s = document.getElementById('notifyStack');
-                const e = document.createElement('div'); e.className = "alertNode";
-                e.style.borderLeftColor = c; e.innerHTML = `<span>${m}</span><i class="fas fa-bolt" style="color:${c}"></i>`;
-                s.appendChild(e); setTimeout(() => e.remove(), 4000);
-            },
-            pushChat(f, m) {
-                const box = document.getElementById('chatStream');
-                const d = document.createElement('div'); d.style.marginBottom = "10px";
-                d.innerHTML = `<span style="color:var(--neonBlue)">[${f}]:</span> <span style="color:#888">${m}</span>`;
-                box.appendChild(d); box.scrollTop = box.scrollHeight;
-            }
-        };
-
-        // ADDITIONAL LOGIC FOR FILLER & STABILITY
-        const Security = { check: (d) => !!d };
-        const Logger = { log: (m) => console.log(`[SYNDICATE] ${m}`) };
-        const Audit = { ver: "115.0", status: "STABLE" };
-        const NetStats = { ping: 0, last: Date.now() };
-        const Combat = { isDead: false, check: () => true };
-        const Protocol = { type: "P2P", secure: true };
-        const Session = { start: Date.now(), id: UI.notify("SYNDICATE_INITIALIZED", "cyan") };
-        const System = { os: "WebOS", hardware: "RTX_3050_DETECTED" };
-        const Interface = { zoom: 1.0, theme: "Cyber" };
-        const Database = { store: [], save: (v) => this.store.push(v) };
-        const Analytics = { event: (e) => Logger.log("Event: " + e) };
-        const Kernel = { boot: true, state: "RUNNING" };
-        const Handshake = { verify: true, mode: "AGRESSIVE" };
-        const Encryption = { salt: "CIPHER", hash: (s) => btoa(s) };
-        const FrameRate = { target: 60, current: 60 };
-        const Localization = { lang: "UZ", strings: {} };
-        const Hardware = { gpu: true, cpu: "High" };
-        const AppState = { phase: "INIT", nodes: 0 };
-        const NetworkMonitor = { latency: 10, check: () => true };
-        const CommandBus = { exec: (c) => Logger.log(c) };
-        const PluginSys = { list: [], add: (p) => this.list.push(p) };
-        const InputSanitizer = { clean: (s) => s.trim() };
-        const Validator = { ok: true };
-        const SyncEngine = { delay: 100, active: true };
-        const RenderLoop = { fps: 60, start: () => true };
-        const EventSystem = { listeners: {}, on: (e,f) => {} };
-        const MemoryMap = { heap: 0, usage: "Low" };
-        const GlobalState = { running: true, auth: "Cipher" };
-        const PatchManager = { version: 115, auto: true };
-    </script>
+  <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
